@@ -73,7 +73,7 @@ func (r *SimpleRunner) Prepare(input map[string][]byte) (ffuf.Request, error) {
 
 	for keyword, inputitem := range input {
 		req.Method = strings.Replace(req.Method, keyword, string(inputitem), -1)
-		headers := make(map[string]string, 0)
+		headers := make(map[string]string, len(req.Headers))
 		for h, v := range req.Headers {
 			var CanonicalHeader string = textproto.CanonicalMIMEHeaderKey(strings.Replace(h, keyword, string(inputitem), -1))
 			headers[CanonicalHeader] = strings.Replace(v, keyword, string(inputitem), -1)

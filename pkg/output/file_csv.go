@@ -35,7 +35,7 @@ func writeCSV(config *ffuf.Config, res []Result, encode bool) error {
 	}
 	for _, r := range res {
 		if encode {
-			inputs := make(map[string][]byte, 0)
+			inputs := make(map[string][]byte, len(r.Input))
 			for k, v := range r.Input {
 				inputs[k] = []byte(base64encode(v))
 			}

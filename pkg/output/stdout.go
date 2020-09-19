@@ -289,7 +289,7 @@ func (s *Stdoutput) Result(resp ffuf.Response) {
 	// Check if we need the data later
 	if s.config.OutputFile != "" {
 		// No need to store results if we're not going to use them later
-		inputs := make(map[string][]byte, 0)
+		inputs := make(map[string][]byte, len(resp.Request.Input))
 		for k, v := range resp.Request.Input {
 			inputs[k] = v
 		}

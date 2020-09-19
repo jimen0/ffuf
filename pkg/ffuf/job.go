@@ -352,7 +352,7 @@ func (j *Job) CalibrateResponses() ([]Response, error) {
 
 	results := make([]Response, 0)
 	for _, input := range cInputs {
-		inputs := make(map[string][]byte, 0)
+		inputs := make(map[string][]byte, len(j.Config.InputProviders))
 		for _, v := range j.Config.InputProviders {
 			inputs[v.Keyword] = []byte(input)
 		}
