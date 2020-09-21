@@ -84,9 +84,11 @@ func (w *WordlistInput) read(r io.Reader) error {
 		data [][]byte
 		ok   bool
 	)
+
 	reader := bufio.NewScanner(r)
 	for reader.Scan() {
 		b := append([]byte{}, reader.Bytes()...)
+
 		if w.config.DirSearchCompat && len(w.config.Extensions) > 0 {
 			if re.Match(b) {
 				for _, ext := range w.config.Extensions {
