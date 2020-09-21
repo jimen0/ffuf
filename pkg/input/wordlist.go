@@ -2,10 +2,10 @@ package input
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/ffuf/ffuf/pkg/ffuf"
 )
@@ -102,40 +102,35 @@ func (w *WordlistInput) read(r io.Reader) error {
 		data [][]byte
 		ok   bool
 	)
-
 	reader := bufio.NewScanner(r)
 	for reader.Scan() {
+		b := append([]byte{}, reader.Bytes()...)
 		if w.config.DirSearchCompat && len(w.config.Extensions) > 0 {
-			text := []byte(reader.Text())
-			if re.Match(text) {
+			if re.Match(b) {
 				for _, ext := range w.config.Extensions {
-					contnt := re.ReplaceAll(text, []byte(ext))
-					data = append(data, []byte(contnt))
+					content := re.ReplaceAll(b, []byte(ext))
+					data = append(data, content)
 				}
 			} else {
-				text := reader.Text()
-
 				if w.config.IgnoreWordlistComments {
-					text, ok = stripComments(text)
+					b, ok = stripComments(b)
 					if !ok {
 						continue
 					}
 				}
-				data = append(data, []byte(text))
+				data = append(data, b)
 			}
 		} else {
-			text := reader.Text()
-
 			if w.config.IgnoreWordlistComments {
-				text, ok = stripComments(text)
+				b, ok = stripComments(b)
 				if !ok {
 					continue
 				}
 			}
-			data = append(data, []byte(text))
+			data = append(data, b)
 			if w.keyword == "FUZZ" && len(w.config.Extensions) > 0 {
 				for _, ext := range w.config.Extensions {
-					data = append(data, []byte(text+ext))
+					data = append(data, append(b, []byte(ext)...))
 				}
 			}
 		}
@@ -145,18 +140,18 @@ func (w *WordlistInput) read(r io.Reader) error {
 }
 
 // stripComments removes all kind of comments from the word
-func stripComments(text string) (string, bool) {
+func stripComments(b []byte) ([]byte, bool) {
 	// If the line starts with a # ignoring any space on the left,
 	// return blank.
-	if strings.HasPrefix(strings.TrimLeft(text, " "), "#") {
-		return "", false
+	if bytes.HasPrefix(bytes.TrimLeft(b, " "), []byte("#")) {
+		return []byte{}, false
 	}
 
 	// If the line has # later after a space, that's a comment.
 	// Only send the word upto space to the routine.
-	index := strings.Index(text, " #")
+	index := bytes.Index(b, []byte(" #"))
 	if index == -1 {
-		return text, true
+		return b, true
 	}
-	return text[:index], true
+	return b[:index], true
 }
