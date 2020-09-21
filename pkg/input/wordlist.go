@@ -2,6 +2,7 @@ package input
 
 import (
 	"bufio"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -21,23 +22,24 @@ func NewWordlistInput(keyword string, value string, conf *ffuf.Config) (*Wordlis
 	wl.keyword = keyword
 	wl.config = conf
 	wl.position = 0
-	var valid bool
-	var err error
-	// stdin?
+
+	var r io.ReadCloser
 	if value == "-" {
-		// yes
-		valid = true
+		r = os.Stdin
 	} else {
-		// no
-		valid, err = wl.validFile(value)
+		valid, err := wl.validFile(value)
+		if err != nil || !valid {
+			return &wl, err
+		}
+
+		r, err = os.Open(value)
+		if err != nil {
+			return &wl, err
+		}
 	}
-	if err != nil {
-		return &wl, err
-	}
-	if valid {
-		err = wl.readFile(value)
-	}
-	return &wl, err
+	defer r.Close()
+
+	return &wl, wl.read(r)
 }
 
 //Position will return the current position in the input list
@@ -92,24 +94,16 @@ func (w *WordlistInput) validFile(path string) (bool, error) {
 	return true, nil
 }
 
-//readFile reads the file line by line to a byte slice
-func (w *WordlistInput) readFile(path string) error {
-	var file *os.File
-	var err error
-	if path == "-" {
-		file = os.Stdin
-	} else {
-		file, err = os.Open(path)
-		if err != nil {
-			return err
-		}
-	}
-	defer file.Close()
-
-	var data [][]byte
-	var ok bool
-	reader := bufio.NewScanner(file)
+// read reads the given reader line by line to a byte slice.
+func (w *WordlistInput) read(r io.Reader) error {
 	re := regexp.MustCompile(`(?i)%ext%`)
+
+	var (
+		data [][]byte
+		ok   bool
+	)
+
+	reader := bufio.NewScanner(r)
 	for reader.Scan() {
 		if w.config.DirSearchCompat && len(w.config.Extensions) > 0 {
 			text := []byte(reader.Text())
