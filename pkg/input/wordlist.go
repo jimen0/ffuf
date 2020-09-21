@@ -18,10 +18,10 @@ type WordlistInput struct {
 }
 
 func NewWordlistInput(keyword string, value string, conf *ffuf.Config) (*WordlistInput, error) {
-	var wl WordlistInput
-	wl.keyword = keyword
-	wl.config = conf
-	wl.position = 0
+	wl := &WordlistInput{
+		keyword: keyword,
+		config:  conf,
+	}
 
 	var r io.ReadCloser
 	if value == "-" {
@@ -29,17 +29,17 @@ func NewWordlistInput(keyword string, value string, conf *ffuf.Config) (*Wordlis
 	} else {
 		valid, err := wl.validFile(value)
 		if err != nil || !valid {
-			return &wl, err
+			return wl, err
 		}
 
 		r, err = os.Open(value)
 		if err != nil {
-			return &wl, err
+			return wl, err
 		}
 	}
 	defer r.Close()
 
-	return &wl, wl.read(r)
+	return wl, wl.read(r)
 }
 
 //Position will return the current position in the input list
