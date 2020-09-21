@@ -27,11 +27,7 @@ func NewWordlistInput(keyword string, value string, conf *ffuf.Config) (*Wordlis
 	if value == "-" {
 		r = os.Stdin
 	} else {
-		valid, err := wl.validFile(value)
-		if err != nil || !valid {
-			return wl, err
-		}
-
+		var err error
 		r, err = os.Open(value)
 		if err != nil {
 			return wl, err
@@ -78,20 +74,6 @@ func (w *WordlistInput) Value() []byte {
 //Total returns the size of wordlist
 func (w *WordlistInput) Total() int {
 	return len(w.data)
-}
-
-//validFile checks that the wordlist file exists and can be read
-func (w *WordlistInput) validFile(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err != nil {
-		return false, err
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return false, err
-	}
-	f.Close()
-	return true, nil
 }
 
 // read reads the given reader line by line to a byte slice.
